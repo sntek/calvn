@@ -1,0 +1,21 @@
+[project]
+name = "calvn-ai-backend"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "pydantic-ai[vercel]>=1.80.0",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
+    "sqlmodel>=0.0.24",
+    "python-dotenv>=1.2.2",
+    "openai>=2.31.0",
+    "pyyaml>=6.0.2",
+    "aiosqlite>=0.21.0",
+]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]

@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv sync:*)",
+      "Bash(bunx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --turbopack --yes)",
+      "WebFetch(domain:ai.pydantic.dev)",
+      "WebFetch(domain:pydantic.dev)",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --turbopack --yes)",
+      "Bash(npm install:*)",
+      "Bash(npx next:*)",
+      "Bash(node -e ':*)",
+      "Bash(uv run:*)",
+      "Bash(uv lock:*)"
+    ]
+  }
+}

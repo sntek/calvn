@@ -1,0 +1,19 @@
+name: defect_summary
+description: Summarize recent defects from Oracle DB grouped by category, with related Jira tickets
+trigger_patterns:
+  - "defect summary"
+  - "defect breakdown"
+  - "failure summary"
+  - "what defects"
+required_tools:
+  - query_oracle
+  - query_jira
+prompt_template: |
+  Provide a comprehensive defect summary:
+  1. Query Oracle for defect counts grouped by category for the last {days:-30} days
+  2. For the top defect categories, search Jira for related tickets
+  3. Synthesize findings: which defects have tickets, which are untracked
+tags:
+  - defects
+  - summary
+  - cross-source

@@ -1,0 +1,18 @@
+name: jira_triage
+description: Triage open Jira tickets in NOVAs project by priority and age
+trigger_patterns:
+  - "triage"
+  - "open tickets"
+  - "ticket priority"
+  - "what needs attention"
+required_tools:
+  - query_jira
+prompt_template: |
+  Triage the NOVAs Jira project:
+  1. List all open tickets sorted by priority (Critical > High > Medium > Low)
+  2. Flag any tickets older than 14 days without updates
+  3. Summarize the current state: how many open, in progress, blocked
+tags:
+  - jira
+  - triage
+  - tickets

@@ -1,0 +1,21 @@
+name: root_cause
+description: Investigate potential root causes by correlating defect patterns with Jira history
+trigger_patterns:
+  - "root cause"
+  - "why are.*failing"
+  - "investigate.*defect"
+  - "correlation"
+required_tools:
+  - query_oracle
+  - query_jira
+prompt_template: |
+  Perform root cause analysis:
+  1. Query Oracle for defect trends over the last {days:-60} days, grouped by category and time
+  2. Identify any spikes or anomalies in defect rates
+  3. Search Jira for tickets created around the same time periods
+  4. Look for correlations: did code changes, deployments, or known issues coincide with defect spikes?
+  5. Present findings with timeline and confidence level
+tags:
+  - analysis
+  - root-cause
+  - cross-source
