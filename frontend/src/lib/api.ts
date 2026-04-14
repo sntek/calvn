@@ -35,7 +35,7 @@ export async function fetchSkill(name: string) {
   return res.json();
 }
 
-export async function createSkill(data: Record<string, unknown>) {
+export async function createSkill(data: Record<string, unknown> | object) {
   const res = await fetch(`${API_BASE}/api/skills`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -45,7 +45,7 @@ export async function createSkill(data: Record<string, unknown>) {
   return res.json();
 }
 
-export async function updateSkill(name: string, data: Record<string, unknown>) {
+export async function updateSkill(name: string, data: Record<string, unknown> | object) {
   const res = await fetch(`${API_BASE}/api/skills/${encodeURIComponent(name)}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
