@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { generateUUID } from "@/lib/uuid";
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000/ws/presence";
 
@@ -9,7 +10,7 @@ const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000/ws/presenc
 let _tabClientId: string | null = null;
 function getTabClientId(): string {
   if (!_tabClientId) {
-    _tabClientId = crypto.randomUUID();
+    _tabClientId = generateUUID();
   }
   return _tabClientId;
 }

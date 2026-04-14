@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { generateUUID } from "@/lib/uuid";
 
 interface SessionState {
   sessionId: string;
@@ -22,7 +23,7 @@ function computeTier(sessions: number, messages: number, usedSettings: boolean):
 export const useSessionStore = create<SessionState>()(
   persist(
     (set, get) => ({
-      sessionId: crypto.randomUUID(),
+      sessionId: generateUUID(),
       totalSessions: 0,
       totalMessages: 0,
       hasUsedSettings: false,
@@ -40,7 +41,7 @@ export const useSessionStore = create<SessionState>()(
         const totalSessions = state.totalSessions + 1;
         set({
           totalSessions,
-          sessionId: crypto.randomUUID(),
+          sessionId: generateUUID(),
           tier: computeTier(totalSessions, state.totalMessages, state.hasUsedSettings),
         });
       },
@@ -51,7 +52,7 @@ export const useSessionStore = create<SessionState>()(
           tier: computeTier(state.totalSessions, state.totalMessages, true),
         });
       },
-      resetSession: () => set({ sessionId: crypto.randomUUID() }),
+      resetSession: () => set({ sessionId: generateUUID() }),
     }),
     { name: "calvn-session" }
   )
