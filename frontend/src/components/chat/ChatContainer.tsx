@@ -6,9 +6,10 @@ import { useRef, useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageBubble } from "./MessageBubble";
 import { InputBar } from "./InputBar";
-import { SamplePrompts } from "./SamplePrompts";
+
 import { MetricsBar } from "@/components/analytics/MetricsBar";
 import { LoadingWhimsy } from "@/components/shared/LoadingWhimsy";
+import { AgentActivity } from "./AgentActivity";
 import { useSessionStore } from "@/stores/session";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -32,19 +33,38 @@ export function ChatContainer() {
   const startTimeRef = useRef<number>(0);
   const { incrementMessages } = useSessionStore();
 
-  const { messages, sendMessage, status, setMessages } = useChat({
+  const { messages, sendMessage, stop, status, setMessages } = useChat({
     transport: new DefaultChatTransport({ api: `${API_BASE}/api/chat` }),
-    onFinish: ({ message }) => {
+    onFinish: ({ message }: { message: any }) => {
       const elapsed = (Date.now() - startTimeRef.current) / 1000;
+
+      // Count real tool invocations from message parts (v6: type starts with "tool-" or is "dynamic-tool")
+      const tool_calls = (message.parts ?? []).filter(
+        (p: any) =>
+          (p.type.startsWith("tool-") && p.type !== "tool-invocation") ||
+          p.type === "dynamic-tool"
+      ).length;
+
+      // Token counts from message metadata (sent via messageMetadata in the stream)
+      const usage = message.metadata?.usage;
+      const input_tokens  = usage?.promptTokens     ?? 0;
+      const output_tokens = usage?.completionTokens ?? 0;
+      const total_tokens  = usage?.totalTokens      ?? (input_tokens + output_tokens);
+
+      // Orchestrator makes at least 1 LLM call; each tool call triggers a
+      // sub-agent which adds another. Add 1 more for the synthesis step if
+      // any tools were called.
+      const llm_calls = tool_calls > 0 ? 1 + tool_calls + 1 : 1;
+
       setMessageMetrics((prev) => ({
         ...prev,
         [message.id]: {
           elapsed_s: elapsed,
-          llm_calls: 1,
-          tool_calls: 0,
-          total_tokens: 0,
-          input_tokens: 0,
-          output_tokens: 0,
+          llm_calls,
+          tool_calls,
+          total_tokens,
+          input_tokens,
+          output_tokens,
         },
       }));
       incrementMessages();
@@ -66,15 +86,6 @@ export function ChatContainer() {
     setMessageMetrics({});
   }, [setMessages]);
 
-  const handlePromptSelect = useCallback(
-    async (prompt: string) => {
-      startTimeRef.current = Date.now();
-      setInput("");
-      await sendMessage({ text: prompt });
-    },
-    [sendMessage]
-  );
-
   // Auto-scroll
   useEffect(() => {
     if (scrollRef.current) {
@@ -82,60 +93,65 @@ export function ChatContainer() {
     }
   }, [messages, isLoading]);
 
-  const showPrompts = messages.length === 0;
-
   return (
     <div className="flex flex-col h-full">
       {/* Messages area */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
         <AnimatePresence mode="wait">
-          {showPrompts ? (
-            <motion.div
-              key="prompts"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0, y: -20 }}
-            >
-              <SamplePrompts onSelect={handlePromptSelect} />
-            </motion.div>
-          ) : (
             <motion.div
               key="messages"
               className="max-w-4xl mx-auto flex flex-col gap-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
-              {messages.map((message) => (
-                <div key={message.id} className="flex flex-col gap-1">
-                  <MessageBubble
-                    role={message.role as "user" | "assistant"}
-                    content={
-                      message.parts
-                        ?.filter((p): p is { type: "text"; text: string } => p.type === "text")
-                        .map((p) => p.text)
-                        .join("") || ""
-                    }
-                    isStreaming={
-                      isLoading &&
-                      message.id === messages[messages.length - 1]?.id &&
-                      message.role === "assistant"
-                    }
-                  />
-                  {message.role === "assistant" &&
-                    messageMetrics[message.id] && (
-                      <div className="ml-0">
-                        <MetricsBar
-                          metrics={{
-                            ...messageMetrics[message.id],
-                            message_count: messages.filter(
-                              (m) => m.role === "user"
-                            ).length,
-                          }}
-                        />
-                      </div>
+              {messages.map((message) => {
+                const isLastAssistant =
+                  isLoading &&
+                  message.id === messages[messages.length - 1]?.id &&
+                  message.role === "assistant";
+
+                const textContent =
+                  message.parts
+                    ?.filter((p: any): p is { type: "text"; text: string } => p.type === "text")
+                    .map((p: any) => p.text)
+                    .join("") || "";
+
+                // Hide the bubble while streaming if there's no text yet
+                // (AgentActivity is showing tool progress instead)
+                const hideEmptyBubble = isLastAssistant && !textContent;
+
+                return (
+                  <div key={message.id} className="flex flex-col gap-1">
+                    {/* Show agent activity steps while this message is streaming */}
+                    {isLastAssistant && (
+                      <AgentActivity
+                        messages={messages}
+                        isStreaming={isLoading}
+                      />
                     )}
-                </div>
-              ))}
+                    {!hideEmptyBubble && (
+                      <MessageBubble
+                        role={message.role as "user" | "assistant"}
+                        content={textContent}
+                        isStreaming={isLastAssistant}
+                      />
+                    )}
+                    {message.role === "assistant" &&
+                      messageMetrics[message.id] && (
+                        <div className="ml-0">
+                          <MetricsBar
+                            metrics={{
+                              ...messageMetrics[message.id],
+                              message_count: messages.filter(
+                                (m) => m.role === "user"
+                              ).length,
+                            }}
+                          />
+                        </div>
+                      )}
+                  </div>
+                );
+              })}
 
               <AnimatePresence>
                 {isLoading &&
@@ -150,7 +166,6 @@ export function ChatContainer() {
                   )}
               </AnimatePresence>
             </motion.div>
-          )}
         </AnimatePresence>
       </div>
 
@@ -160,6 +175,7 @@ export function ChatContainer() {
           input={input}
           setInput={setInput}
           onSubmit={handleSend}
+          onStop={stop}
           onClear={handleClear}
           isLoading={isLoading}
           messageCount={messages.length}

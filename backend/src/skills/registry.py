@@ -77,5 +77,85 @@ class SkillRegistry:
             for s in self._skills.values()
         ]
 
+    def get_full(self, name: str) -> dict[str, Any] | None:
+        """Return all fields for a skill, including prompt_template and required_tools."""
+        skill = self._skills.get(name)
+        if skill is None:
+            return None
+        return {
+            "name": skill.name,
+            "description": skill.description,
+            "trigger_patterns": skill.trigger_patterns,
+            "required_tools": skill.required_tools,
+            "prompt_template": skill.prompt_template,
+            "tags": skill.tags,
+        }
+
+    def create(self, data: dict[str, Any]) -> SkillDefinition:
+        """Create a new skill, write YAML to definitions dir, and add to registry."""
+        self._definitions_dir.mkdir(parents=True, exist_ok=True)
+        skill = SkillDefinition(
+            name=data["name"],
+            description=data.get("description", ""),
+            trigger_patterns=data.get("trigger_patterns", []),
+            required_tools=data.get("required_tools", []),
+            prompt_template=data.get("prompt_template", ""),
+            tags=data.get("tags", []),
+        )
+        yaml_path = self._definitions_dir / f"{skill.name}.yaml"
+        with open(yaml_path, "w") as f:
+            yaml.dump(
+                {
+                    "name": skill.name,
+                    "description": skill.description,
+                    "trigger_patterns": skill.trigger_patterns,
+                    "required_tools": skill.required_tools,
+                    "prompt_template": skill.prompt_template,
+                    "tags": skill.tags,
+                },
+                f,
+                default_flow_style=False,
+                sort_keys=False,
+            )
+        self._skills[skill.name] = skill
+        return skill
+
+    def update(self, name: str, data: dict[str, Any]) -> SkillDefinition | None:
+        """Update an existing skill's YAML file and in-memory entry."""
+        if name not in self._skills:
+            return None
+        existing = self._skills[name]
+        existing.description = data.get("description", existing.description)
+        existing.trigger_patterns = data.get("trigger_patterns", existing.trigger_patterns)
+        existing.required_tools = data.get("required_tools", existing.required_tools)
+        existing.prompt_template = data.get("prompt_template", existing.prompt_template)
+        existing.tags = data.get("tags", existing.tags)
+        yaml_path = self._definitions_dir / f"{name}.yaml"
+        with open(yaml_path, "w") as f:
+            yaml.dump(
+                {
+                    "name": existing.name,
+                    "description": existing.description,
+                    "trigger_patterns": existing.trigger_patterns,
+                    "required_tools": existing.required_tools,
+                    "prompt_template": existing.prompt_template,
+                    "tags": existing.tags,
+                },
+                f,
+                default_flow_style=False,
+                sort_keys=False,
+            )
+        return existing
+
+    def delete(self, name: str) -> bool:
+        """Delete a skill's YAML file and remove from in-memory registry."""
+        if name not in self._skills:
+            return False
+        yaml_path = self._definitions_dir / f"{name}.yaml"
+        if yaml_path.exists():
+            yaml_path.unlink()
+        del self._skills[name]
+        return True
+
 
 skill_registry = SkillRegistry()

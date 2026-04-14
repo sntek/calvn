@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { Settings } from "lucide-react";
 import { ChatContainer } from "@/components/chat/ChatContainer";
 import { UserCount } from "@/components/shared/UserCount";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
+import { StartupWarnings } from "@/components/shared/StartupWarnings";
 import Link from "next/link";
 
 export default function Home() {
@@ -37,6 +39,7 @@ export default function Home() {
 
         <div className="flex items-center gap-3">
           <UserCount />
+          <ThemeToggle />
 
           <Link href="/settings">
             <motion.button
@@ -51,6 +54,9 @@ export default function Home() {
           </Link>
         </div>
       </motion.header>
+
+      {/* Startup warnings */}
+      <StartupWarnings />
 
       {/* Chat */}
       <main className="flex-1 overflow-hidden">

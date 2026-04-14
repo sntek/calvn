@@ -20,6 +20,8 @@ ORACLE_WALLET_DIR = os.getenv("ORACLE_WALLET_DIR")
 ORACLE_TNS_ALIAS = os.getenv("ORACLE_TNS_ALIAS")
 ORACLE_DISPLAY_NAME = os.getenv("ORACLE_DISPLAY_NAME", "tektestdb")
 
+JIRA_DEFAULT_PROJECTS = [p.strip() for p in os.getenv("JIRA_PROJECTS", "NOVAs,JAS").split(",") if p.strip()]
+
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 MAX_CONCURRENT_REQUESTS = int(os.getenv("MAX_CONCURRENT_REQUESTS", "5"))
 

@@ -181,16 +181,20 @@ async def ensure_oracle_connection() -> None:
         print(f"[oracle_setup] Skipping — missing env vars: {', '.join(missing)}")
         return
 
-    result = await register_connection(
-        wallet_directory=ORACLE_WALLET_DIR,
-        alias=ORACLE_TNS_ALIAS,
-        username=ORACLE_USER,
-        password=ORACLE_PASSWORD,
-        display_name=ORACLE_DISPLAY_NAME,
-    )
-    print(f"[oracle_setup] {result.message}")
-    if not result.ok:
-        print(f"[oracle_setup] WARNING: Oracle registration failed, continuing anyway")
+    try:
+        result = await register_connection(
+            wallet_directory=ORACLE_WALLET_DIR,
+            alias=ORACLE_TNS_ALIAS,
+            username=ORACLE_USER,
+            password=ORACLE_PASSWORD,
+            display_name=ORACLE_DISPLAY_NAME,
+        )
+        print(f"[oracle_setup] {result.message}")
+        if not result.ok:
+            print("[oracle_setup] WARNING: Oracle registration failed, continuing anyway")
+    except Exception as e:
+        print(f"[oracle_setup] WARNING: Could not reach Oracle MCP server: {e}")
+        print("[oracle_setup] The app will start, but Oracle queries will fail until the MCP server is available.")
 
 
 if __name__ == "__main__":
