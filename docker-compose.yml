@@ -5,11 +5,21 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8001:8000"
-    env_file:
-      - ./backend/.env
     environment:
-      - FRONTEND_URL=http://localhost:3000
-      - DB_PATH=/app/data/calvn.db
+      - BIFROST_BASE_URL=${BIFROST_BASE_URL}
+      - BIFROST_API_KEY=${BIFROST_API_KEY}
+      - LANTHANUM_MODEL=${LANTHANUM_MODEL}
+      - QWEN_BASE_URL=${QWEN_BASE_URL}
+      - ORACLE_MCP_URL=${ORACLE_MCP_URL}
+      - JIRA_MCP_URL=${JIRA_MCP_URL}
+      - ORACLE_USER=${ORACLE_USER}
+      - ORACLE_PASSWORD=${ORACLE_PASSWORD}
+      - ORACLE_WALLET_DIR=${ORACLE_WALLET_DIR}
+      - ORACLE_TNS_ALIAS=${ORACLE_TNS_ALIAS}
+      - ORACLE_DISPLAY_NAME=${ORACLE_DISPLAY_NAME}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - DB_PATH=${DB_PATH}
+      - MAX_CONCURRENT_REQUESTS=${MAX_CONCURRENT_REQUESTS}
     volumes:
       - backend-data:/app/data
     restart: unless-stopped
@@ -19,8 +29,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://lanthanum.global.tektronix.net:8001
-        NEXT_PUBLIC_WS_URL: ws://lanthanum.global.tektronix.net:8001/ws/presence
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL}
     ports:
       - "3001:3000"
     depends_on:
